@@ -287,6 +287,7 @@
                 <button class="nav-tab" data-page="cbot-dce">CBOT-DCE价差</button>
                 <button class="nav-tab" data-page="wheat-corn">小麦-玉米价差</button>
                 <button class="nav-tab" data-page="fob">FOB基差</button>
+                <a href="versions.html" class="nav-tab" style="text-decoration:none; cursor:pointer;">📦 版本管理</a>
             </div>
         </div>
     </nav>
@@ -161706,15 +161707,79 @@
         ];
 
         // ===== localStorage 工具：存取各图表隐藏年份集合 =====
+        // 默认隐藏2020年的数据（2021年1月1日之前的数据）
+        var DEFAULT_HIDDEN_YEARS = ['2020'];
+        
         function getHiddenYears(chartKey) {
             try {
                 var raw = localStorage.getItem('seasonal_hidden_' + chartKey);
-                return raw ? JSON.parse(raw) : [];
-            } catch(e) { return []; }
+                if (raw) {
+                    return JSON.parse(raw);
+                }
+                // 如果localStorage中没有记录，返回默认值：隐藏2020年
+                return DEFAULT_HIDDEN_YEARS.slice();
+            } catch(e) { return DEFAULT_HIDDEN_YEARS.slice(); }
         }
         function setHiddenYears(chartKey, hiddenArr) {
             try {
                 localStorage.setItem('seasonal_hidden_' + chartKey, JSON.stringify(hiddenArr));
+            } catch(e) {}
+        }
+
+        // ===== 月份范围解析函数 =====
+        // 根据图表名称解析出默认的月份范围
+        // 返回 {startMonth: 1-12, endMonth: 1-12} 其中 startMonth 是起始月，endMonth 是结束月
+        function parseSpreadMonthRange(spreadName) {
+            var result = { startMonth: 1, endMonth: 12 }; // 默认显示全年
+            
+            // 处理 DCE 月间价差：格式如 "1-3", "3-5", "3-7", "3-9", "1-5", "5-7", "7-9", "9-11"
+            var dceMatch = spreadName.match(/^(\d+)-(\d+)$/);
+            if (dceMatch) {
+                var frontMonth = parseInt(dceMatch[1]);    // 前月
+                var backMonth = parseInt(dceMatch[2]);      // 后月
+                // 横轴起点 = 后月 + 1（如果>12则=1）
+                // 横轴终点 = 前月
+                result.startMonth = (backMonth % 12) + 1;
+                result.endMonth = frontMonth;
+                return result;
+            }
+            
+            // 处理 CBOT-DCE 价差：格式如 "CBOT-03vDCE-C05", "CBOT-05vDCE-C07"
+            var cbotMatch = spreadName.match(/CBOT-(\d+)vDCE-C(\d+)/);
+            if (cbotMatch) {
+                var cbotMonth = parseInt(cbotMatch[1]);     // CBOT 月份
+                var dceMonth = parseInt(cbotMatch[2]);      // DCE 月份
+                result.startMonth = (dceMonth % 12) + 1;
+                result.endMonth = cbotMonth;
+                return result;
+            }
+            
+            // 处理小麦-玉米价差：格式如 "Wheat-CC01", "Wheat-CC03"
+            var wheatMatch = spreadName.match(/Wheat-CC(\d+)/);
+            if (wheatMatch) {
+                var wheatMonth = parseInt(wheatMatch[1]);
+                result.startMonth = (wheatMonth % 12) + 1;
+                result.endMonth = wheatMonth;
+                return result;
+            }
+            
+            return result;
+        }
+
+        // 获取或设置图表的月份范围缓存
+        function getMonthRange(chartKey) {
+            try {
+                var raw = localStorage.getItem('seasonal_range_' + chartKey);
+                if (raw) {
+                    return JSON.parse(raw);
+                }
+                return null;
+            } catch(e) { return null; }
+        }
+        
+        function setMonthRange(chartKey, monthRange) {
+            try {
+                localStorage.setItem('seasonal_range_' + chartKey, JSON.stringify(monthRange));
             } catch(e) {}
         }
 
@@ -161739,14 +161804,59 @@
                 var chartKey = containerId + '_' + spreadName.replace(/\s/g,'_');
                 var hiddenYears = getHiddenYears(chartKey);
 
+                // 清除月份范围缓存,强制重新计算(避免旧的错误缓存影响显示)
+                localStorage.removeItem('seasonal_range_' + chartKey);
+
                 var safeId = containerId + '-chart-' + idx;
                 var chartDiv = document.createElement('div');
                 chartDiv.className = 'chart-card half-width';
+                
+                // 创建月份选择器HTML
+                var monthRange = getMonthRange(chartKey) || parseSpreadMonthRange(spreadName);
+                
+                // 判断是否跨年
+                var isWrapped = monthRange.startMonth > monthRange.endMonth;
+                
+                // ===== 调试日志: 解析结果 =====
+                var dceMatch = spreadName.match(/^(\d+)-(\d+)$/);
+                if (dceMatch) {
+                    console.log('========== [DCE Debug] Chart: ' + spreadName + ' ==========');
+                    console.log('[DCE Debug] Price name format: ' + dceMatch[1] + '-' + dceMatch[2]);
+                    console.log('[DCE Debug] Parse result:', {
+                        frontMonth: parseInt(dceMatch[1]),
+                        backMonth: parseInt(dceMatch[2]),
+                        startMonth: monthRange.startMonth,
+                        endMonth: monthRange.endMonth
+                    });
+                    console.log('[DCE Debug] isWrapped:', isWrapped, 
+                        '(' + monthRange.startMonth + ' > ' + monthRange.endMonth + ')');
+                }
+                
+                var monthSelectHtml = 
+                    '<div style="display:flex; gap:8px; align-items:center; font-size:12px; margin-bottom:12px;">' +
+                    '  <label style="color:var(--text-secondary);">显示月份:</label>' +
+                    '  <select id="' + safeId + '-start" class="month-selector" style="background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border-color); padding:4px 8px; border-radius:4px; cursor:pointer;">' +
+                    '    <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>' +
+                    '    <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>' +
+                    '    <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>' +
+                    '    <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>' +
+                    '  </select>' +
+                    '  <span style="color:var(--text-secondary);">~</span>' +
+                    '  <select id="' + safeId + '-end" class="month-selector" style="background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border-color); padding:4px 8px; border-radius:4px; cursor:pointer;">' +
+                    '    <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>' +
+                    '    <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>' +
+                    '    <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>' +
+                    '    <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>' +
+                    '  </select>' +
+                    '  <button id="' + safeId + '-reset" class="month-selector" style="background:var(--accent-blue); color:white; border:none; padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">重置</button>' +
+                    '</div>';
+                
                 chartDiv.innerHTML =
                     '<div class="chart-header">' +
                     '  <h3 class="chart-title">' + titlePrefix + spreadName + ' 季节图</h3>' +
-                    '  <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">每条线代表一年走势，点图例可显示/隐藏</div>' +
+                    '  <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">每条线代表一年走势，点图例可显示/隐藏；拖动下方滑块选择月份范围</div>' +
                     '</div>' +
+                    monthSelectHtml +
                     '<div class="chart-container" style="height:320px">' +
                     '  <canvas id="' + safeId + '"></canvas>' +
                     '</div>';
@@ -161756,8 +161866,26 @@
                 var datasets = years.map(function(yr, i) {
                     var values = yearDataMap[yr];
                     var isCurrent = (yr === String(new Date().getFullYear()));
+                    
+                    // 判断是否跨年，生成对应的图例标签
+                    var displayLabel = yr;
+                    if (isWrapped) {
+                        var yearNum = parseInt(yr);
+                        var nextYear = yearNum + 1;
+                        displayLabel = yr + '/' + String(nextYear);
+                        // 只在第一次循环时输出
+                        if (i === 0) {
+                            console.log('[DCE Debug] ✅ Cross-year label generation:', yr, '→', displayLabel);
+                        }
+                    } else {
+                        // 只在第一次循环时输出
+                        if (i === 0) {
+                            console.log('[DCE Debug] ✅ Same-year label generation:', yr, '→', displayLabel);
+                        }
+                    }
+                    
                     return {
-                        label: yr,
+                        label: displayLabel,
                         data: values,
                         borderColor: YEAR_COLORS[i % YEAR_COLORS.length],
                         backgroundColor: 'transparent',
@@ -161765,10 +161893,34 @@
                         pointRadius: 0,
                         borderWidth: isCurrent ? 2.5 : 1.2,
                         spanGaps: true,          // ← 连接 null 断点，不断线
-                        hidden: hiddenYears.indexOf(yr) !== -1  // ← 从localStorage恢复隐藏状态
+                        hidden: hiddenYears.indexOf(yr) !== -1  // ← 从localStorage恢复隐藏状态(使用原始年份yr)
                     };
                 });
 
+                // 计算月份范围对应的数据索引
+                // labels 数组对应 01-01 ~ 12-31，共365天
+                var startMonthDayStr = (monthRange.startMonth < 10 ? '0' : '') + monthRange.startMonth + '-01';
+                var endMonthDayStr = (monthRange.endMonth < 10 ? '0' : '') + monthRange.endMonth + '-01';
+                var startIndex = labels.indexOf(startMonthDayStr);
+                var endIndex = labels.indexOf(endMonthDayStr);
+                
+                // ===== 调试日志: 横坐标计算 =====
+                console.log('[DCE Debug] Labels format sample:', labels[0], labels[labels.length-1]);
+                console.log('[DCE Debug] Looking for start date:', startMonthDayStr);
+                console.log('[DCE Debug] Looking for end date:', endMonthDayStr);
+                console.log('[DCE Debug] Found indices: start=' + startIndex + ', end=' + endIndex);
+                if (startIndex === -1 || endIndex === -1) {
+                    console.warn('[DCE Debug] ⚠️ Date not found! Trying YYYY-MM-DD format...');
+                    // 尝试YYYY-MM-DD格式
+                    var startMonthDayStr2 = '2024-' + startMonthDayStr;
+                    var endMonthDayStr2 = '2024-' + endMonthDayStr;
+                    startIndex = labels.indexOf(startMonthDayStr2);
+                    endIndex = labels.indexOf(endMonthDayStr2);
+                    console.log('[DCE Debug] With YYYY prefix: start=' + startIndex + ', end=' + endIndex);
+                }
+                console.log('[DCE Debug] Final X-axis range: index ' + startIndex + ' → ' + endIndex);
+                console.log('===================================================\n');
+                
                 var chartInst = new Chart(document.getElementById(safeId), {
                     type: 'line',
                     data: { labels: labels, datasets: datasets },
@@ -161817,6 +161969,8 @@
                         scales: {
                             x: {
                                 grid: { color: '#30363d' },
+                                min: startIndex >= 0 ? startIndex : undefined,
+                                max: endIndex >= 0 ? endIndex : undefined,
                                 ticks: {
                                     color: '#8b949e',
                                     // 固定只在每月1日打标签，共12个，全部显示
@@ -161839,6 +161993,62 @@
                         }
                     }
                 });
+                
+                // 保存图表实例和相关信息供月份选择器使用
+                chartInst._spreadName = spreadName;
+                chartInst._chartKey = chartKey;
+                chartInst._labels = labels;
+                chartInst._monthRange = monthRange;
+                
+                // 设置月份选择器的初始值
+                var startSelect = document.getElementById(safeId + '-start');
+                var endSelect = document.getElementById(safeId + '-end');
+                if (startSelect && endSelect) {
+                    startSelect.value = monthRange.startMonth;
+                    endSelect.value = monthRange.endMonth;
+                    
+                    // 监听月份选择器变化
+                    function updateChartRange() {
+                        var newStart = parseInt(startSelect.value);
+                        var newEnd = parseInt(endSelect.value);
+                        var newRange = { startMonth: newStart, endMonth: newEnd };
+                        setMonthRange(chartKey, newRange);
+                        
+                        // 更新Chart.js的min/max
+                        var startMonthStr = (newStart < 10 ? '0' : '') + newStart + '-01';
+                        var endMonthStr = (newEnd < 10 ? '0' : '') + newEnd + '-01';
+                        var newStartIndex = labels.indexOf(startMonthStr);
+                        var newEndIndex = labels.indexOf(endMonthStr);
+                        
+                        chartInst.options.scales.x.min = newStartIndex >= 0 ? newStartIndex : undefined;
+                        chartInst.options.scales.x.max = newEndIndex >= 0 ? newEndIndex : undefined;
+                        chartInst.update();
+                    }
+                    
+                    startSelect.addEventListener('change', updateChartRange);
+                    endSelect.addEventListener('change', updateChartRange);
+                }
+                
+                // 重置按钮
+                var resetBtn = document.getElementById(safeId + '-reset');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', function() {
+                        var defaultRange = parseSpreadMonthRange(spreadName);
+                        localStorage.removeItem('seasonal_range_' + chartKey);
+                        startSelect.value = defaultRange.startMonth;
+                        endSelect.value = defaultRange.endMonth;
+                        
+                        // 重新设置图表范围
+                        var startMonthStr = (defaultRange.startMonth < 10 ? '0' : '') + defaultRange.startMonth + '-01';
+                        var endMonthStr = (defaultRange.endMonth < 10 ? '0' : '') + defaultRange.endMonth + '-01';
+                        var defStartIndex = labels.indexOf(startMonthStr);
+                        var defEndIndex = labels.indexOf(endMonthStr);
+                        
+                        chartInst.options.scales.x.min = defStartIndex >= 0 ? defStartIndex : undefined;
+                        chartInst.options.scales.x.max = defEndIndex >= 0 ? defEndIndex : undefined;
+                        chartInst.update();
+                    });
+                }
             });
         }
 
