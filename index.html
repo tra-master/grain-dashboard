@@ -399,12 +399,29 @@
     
     <script>
         let spreadData = {};
+        let initializedPages = {};  // 追踪已初始化的页面：{ 'overview': true, 'dce-spreads': true, ... }
 
-        // ===== 导航切换（完全独立，不依赖数据加载）=====
+        // ===== 导航切换 + 图表懒加载 =====
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             var target = document.getElementById('page-' + pageId);
             if (target) target.classList.remove('hidden');
+            
+            // 懒加载：只有当用户首次点击某个 Tab 时，才初始化该页面的图表
+            if (!initializedPages[pageId]) {
+                initializedPages[pageId] = true;
+                
+                // 根据页面 ID 调用相应的初始化函数
+                if (pageId === 'dce-spreads') {
+                    initDCECharts();
+                } else if (pageId === 'cbot-dce') {
+                    initCBTDCharts();
+                } else if (pageId === 'wheat-corn') {
+                    initWheatCharts();
+                } else if (pageId === 'fob') {
+                    initFOB();
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -161653,10 +161670,16 @@
                 spreadData = EMBEDDED_DATA;
                 console.log('Data loaded from embedded:', Object.keys(spreadData));
                 updateOverviewCards();
-                initDCECharts();
-                initCBTDCharts();
-                initWheatCharts();
-                initFOB();
+                
+                // 标记总览页已初始化（总览页在页面加载时就可见）
+                initializedPages['overview'] = true;
+                
+                // ❌ 移除以下四行（改为懒加载）：
+                // initDCECharts();
+                // initCBTDCharts();
+                // initWheatCharts();
+                // initFOB();
+                
                 document.getElementById('last-update').textContent = new Date().toLocaleString('zh-CN');
             } catch (error) {
                 console.error('Error initializing data:', error);
