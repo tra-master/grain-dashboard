@@ -1,0 +1,283 @@
+[2026-03-17 17:24:29] ======== 自动更新开始 ========
+[2026-03-17 17:24:29] === Step 1: 执行复制.bat ===
+[2026-03-17 17:24:29]   bat stdout: E:\化学家云盘同步\sscpcnV2\粮化部\筛选后研究数据>chcp 65001 
+Active code page: 65001
+Overwrite E:\化学家云盘同步\sscpcnV2\粮化部\筛选后研究数据\部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx (Yes/No/All)? y
+E:\化学家云盘同步\sscpcnV2\粮化部\玉米研究\周报数据\部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx
+1 File(s) copied
+Overwrite E:\化学家云盘同步\sscpcnV2\粮化部\筛选后研究数据\Part1-玉
+[2026-03-17 17:24:29]   bat 执行完毕
+[2026-03-17 17:24:29] === Step 2: 重新生成 JSON 数据 ===
+[2026-03-17 17:24:35]   stdout: Loading data...
+Loading DCE corn futures...
+  DCE data: (4170, 7)
+Loading CBOT corn futures...
+  CBOT data: (6087, 6)
+Loading exchange rate...
+  Rate data: (11189, 1)
+Loading Zhoukou wheat data...
+  Wheat data: (2735, 3)
+Calculating DCE spreads...
+Calculating CBOT-DCE spreads (new formula)...
+Calculating Wheat-Corn spreads...
+Data exported to: C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\src\..\dashboard\data\spread_data.json
+[2026-03-17 17:24:35]   JSON 已生成: 2834 KB
+[2026-03-17 17:24:35] === Step 3: 内嵌 JSON 到 HTML ===
+[2026-03-17 17:24:35]   HTML 已更新，大小: 2703 KB
+[2026-03-17 17:24:35] === Step 4: 复制到部署目录 ===
+[2026-03-17 17:24:35]   已复制: 2863 KB
+[2026-03-17 17:24:35] === Step 5: 推送到 GitHub Pages ===
+[2026-03-17 17:24:36]   git commit: [main dae9250] auto update 2026-03-17 17:24
+ 1 file changed, 161211 insertions(+), 1 deletion(-)
+[2026-03-17 17:24:39]   git push: To https://github.com/tra-master/grain-dashboard.git
+   b903cb8..dae9250  main -> main
+[2026-03-17 17:24:39]   推送成功！https://tra-master.github.io/grain-dashboard/
+[2026-03-17 17:24:39] ======== 自动更新完成 ========
+[2026-03-17 17:30:37] ======== 自动更新开始 ========
+[2026-03-17 17:30:37] === Step 1: 复制源数据文件 ===
+[2026-03-17 17:30:37]   [OK]   部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx
+[2026-03-17 17:30:37]   [OK]   Part1-玉米02-利润与库存-lyy周报.xlsx
+[2026-03-17 17:30:37]   [OK]   usda销售进度和装船量-周报.xlsx
+[2026-03-17 17:30:37]   [OK]   美国乙醇数据-周报.xlsx
+[2026-03-17 17:30:37]   [OK]   恢复-历史-基差月差套-lyy周报 - 副本.xlsx
+[2026-03-17 17:30:37]   [OK]   Part6-生猪03-生猪现货养殖利润-lyy周报xin.xlsx
+[2026-03-17 17:30:37]   [OK]   钢联数据淀粉周度数据-周报.xlsx
+[2026-03-17 17:30:37]   [OK]   东北深加工收购量.xlsx
+[2026-03-17 17:30:37]   [OK]   frieght dVT-Dl.xlsx
+[2026-03-17 17:30:37]   [OK]   高粱大麦.xlsx
+[2026-03-17 17:30:37]   [OK]   路透高粱usda数据更新-1.xlsx
+[2026-03-17 17:30:37]   [OK]   路透玉米usda数据更新-1.xlsx
+[2026-03-17 17:30:37]   [OK]   CBOT新.xlsx
+[2026-03-17 17:30:37]   [OK]   钢联普麦-dce价差.xlsx
+[2026-03-17 17:30:37]   [OK]   钢联数据_玉米：深加工企业：早间剩余车辆：山东（日）_2025-1-9_1736404789117.xlsx
+[2026-03-17 17:30:37]   复制完成: 成功=15, 跳过=0, 失败=0
+[2026-03-17 17:30:37] === Step 2: 重新生成 JSON 数据 ===
+[2026-03-17 17:30:42]   stdout: Loading data...
+Loading DCE corn futures...
+  DCE data: (4170, 7)
+Loading CBOT corn futures...
+  CBOT data: (6087, 6)
+Loading exchange rate...
+  Rate data: (11189, 1)
+Loading Zhoukou wheat data...
+  Wheat data: (2735, 3)
+Calculating DCE spreads...
+Calculating CBOT-DCE spreads (new formula)...
+Calculating Wheat-Corn spreads...
+Data exported to: C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\src\..\dashboard\data\spread_data.json
+[2026-03-17 17:30:42]   JSON 已生成: 2834 KB
+[2026-03-17 17:30:42] === Step 3: 内嵌 JSON 到 HTML ===
+[2026-03-17 17:30:42]   HTML 已更新，大小: 2703 KB
+[2026-03-17 17:30:42] === Step 4: 复制到部署目录 ===
+[2026-03-17 17:30:42]   已复制: 2863 KB
+[2026-03-17 17:30:42] === Step 5: 推送到 GitHub Pages ===
+[2026-03-17 17:30:42]   git commit: On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	copy_file.py
+	setup_git.py
+
+nothing added to commit but untracked files present (use "git add" to track)
+[2026-03-17 17:30:44]   git push: Everything up-to-date
+[2026-03-17 17:30:44]   推送成功！https://tra-master.github.io/grain-dashboard/
+[2026-03-17 17:30:44] ======== 自动更新完成 ========
+[2026-03-17 17:32:31] ======== 自动更新开始 ========
+[2026-03-17 17:32:31] === Step 1: 复制源数据文件 ===
+[2026-03-17 17:32:31]   [OK]   部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx
+[2026-03-17 17:32:31]   [OK]   Part1-玉米02-利润与库存-lyy周报.xlsx
+[2026-03-17 17:32:31]   [OK]   usda销售进度和装船量-周报.xlsx
+[2026-03-17 17:32:31]   [OK]   美国乙醇数据-周报.xlsx
+[2026-03-17 17:32:31]   [OK]   恢复-历史-基差月差套-lyy周报 - 副本.xlsx
+[2026-03-17 17:32:31]   [OK]   Part6-生猪03-生猪现货养殖利润-lyy周报xin.xlsx
+[2026-03-17 17:32:31]   [OK]   钢联数据淀粉周度数据-周报.xlsx
+[2026-03-17 17:32:31]   [OK]   东北深加工收购量.xlsx
+[2026-03-17 17:32:31]   [OK]   frieght dVT-Dl.xlsx
+[2026-03-17 17:32:31]   [OK]   高粱大麦.xlsx
+[2026-03-17 17:32:31]   [OK]   路透高粱usda数据更新-1.xlsx
+[2026-03-17 17:32:31]   [OK]   路透玉米usda数据更新-1.xlsx
+[2026-03-17 17:32:31]   [OK]   CBOT新.xlsx
+[2026-03-17 17:32:31]   [OK]   钢联普麦-dce价差.xlsx
+[2026-03-17 17:32:31]   [OK]   钢联数据_玉米：深加工企业：早间剩余车辆：山东（日）_2025-1-9_1736404789117.xlsx
+[2026-03-17 17:32:31]   复制完成: 成功=15, 跳过=0, 失败=0
+[2026-03-17 17:32:31] === Step 2: 重新生成 JSON 数据 ===
+[2026-03-17 17:32:37]   stdout: Loading data...
+Loading DCE corn futures...
+  DCE data: (4170, 7)
+Loading CBOT corn futures...
+  CBOT data: (6087, 6)
+Loading exchange rate...
+  Rate data: (11189, 1)
+Loading Zhoukou wheat data...
+  Wheat data: (2735, 3)
+Calculating DCE spreads...
+Calculating CBOT-DCE spreads (new formula)...
+Calculating Wheat-Corn spreads...
+Data exported to: C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\src\..\dashboard\data\spread_data.json
+[2026-03-17 17:32:37]   JSON 已生成: 2834 KB
+[2026-03-17 17:32:37] === Step 3: 内嵌 JSON 到 HTML ===
+[2026-03-17 17:32:37]   HTML 已更新，大小: 2703 KB
+[2026-03-17 17:32:37] === Step 4: 复制到部署目录 ===
+[2026-03-17 17:32:37]   已复制: 2863 KB
+[2026-03-17 17:32:37] === Step 5: 推送到 GitHub Pages ===
+[2026-03-17 17:32:37]   git commit: On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	copy_file.py
+	setup_git.py
+
+nothing added to commit but untracked files present (use "git add" to track)
+[2026-03-17 17:32:38]   git push: Everything up-to-date
+[2026-03-17 17:32:38]   推送成功！https://tra-master.github.io/grain-dashboard/
+[2026-03-17 17:32:38] ======== 自动更新完成 ========
+[2026-03-17 19:00:32] ======== 自动更新开始 ========
+[2026-03-17 19:00:32] === Step 1: 复制源数据文件 ===
+[2026-03-17 19:00:32]   [SKIP] 源文件不存在: 部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx
+[2026-03-17 19:00:32]   [OK]   Part1-玉米02-利润与库存-lyy周报.xlsx
+[2026-03-17 19:00:32]   [OK]   usda销售进度和装船量-周报.xlsx
+[2026-03-17 19:00:32]   [OK]   美国乙醇数据-周报.xlsx
+[2026-03-17 19:00:32]   [OK]   恢复-历史-基差月差套-lyy周报 - 副本.xlsx
+[2026-03-17 19:00:32]   [OK]   Part6-生猪03-生猪现货养殖利润-lyy周报xin.xlsx
+[2026-03-17 19:00:32]   [OK]   钢联数据淀粉周度数据-周报.xlsx
+[2026-03-17 19:00:32]   [OK]   东北深加工收购量.xlsx
+[2026-03-17 19:00:32]   [OK]   frieght dVT-Dl.xlsx
+[2026-03-17 19:00:32]   [OK]   高粱大麦.xlsx
+[2026-03-17 19:00:32]   [OK]   路透高粱usda数据更新-1.xlsx
+[2026-03-17 19:00:32]   [OK]   路透玉米usda数据更新-1.xlsx
+[2026-03-17 19:00:32]   [OK]   CBOT新.xlsx
+[2026-03-17 19:00:32]   [OK]   钢联普麦-dce价差.xlsx
+[2026-03-17 19:00:32]   [OK]   钢联数据_玉米：深加工企业：早间剩余车辆：山东（日）_2025-1-9_1736404789117.xlsx
+[2026-03-17 19:00:32]   复制完成: 成功=14, 跳过=1, 失败=0
+[2026-03-17 19:00:32] === Step 2: 重新生成 JSON 数据 ===
+[2026-03-17 19:00:37]   stdout: Loading data...
+Loading DCE corn futures...
+  DCE data: (4175, 7)
+Loading CBOT corn futures...
+  CBOT data: (6092, 6)
+Loading exchange rate...
+  Rate data: (11194, 1)
+Loading Zhoukou wheat data...
+  Wheat data: (2735, 3)
+Calculating DCE spreads...
+Calculating CBOT-DCE spreads (new formula)...
+Calculating Wheat-Corn spreads...
+Data exported to: C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\src\..\dashboard\data\spread_data.json
+[2026-03-17 19:00:37]   JSON 已生成: 2834 KB
+[2026-03-17 19:00:37] === Step 3: 内嵌 JSON 到 HTML ===
+[2026-03-17 19:00:38]   HTML 已更新，大小: 2704 KB
+[2026-03-17 19:00:38] === Step 4: 复制到部署目录 ===
+[2026-03-17 19:00:38]   已复制: 2863 KB
+[2026-03-17 19:00:38] === Step 5: 推送到 GitHub Pages ===
+[2026-03-17 19:00:38]   git commit: [main 11079f9] auto update 2026-03-17 19:00
+ 1 file changed, 386 insertions(+), 374 deletions(-)
+[2026-03-17 19:01:18]   git push: fatal: unable to access 'https://github.com/tra-master/grain-dashboard.git/': Recv failure: Connection was reset
+[2026-03-17 19:01:18] [ERROR] 更新失败: git push 失败: fatal: unable to access 'https://github.com/tra-master/grain-dashboard.git/': Recv failure: Connection was reset
+
+[2026-03-17 19:01:18] Traceback (most recent call last):
+  File "C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\auto_update.py", line 161, in main
+    step5_git_push()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\auto_update.py", line 150, in step5_git_push
+    raise RuntimeError(f'git push 失败: {r.stderr}')
+RuntimeError: git push 失败: fatal: unable to access 'https://github.com/tra-master/grain-dashboard.git/': Recv failure: Connection was reset
+
+
+[2026-03-18 08:53:46] ======== 自动更新开始 ========
+[2026-03-18 08:53:46] === Step 1: 复制源数据文件 ===
+[2026-03-18 08:53:46]   [SKIP] 源文件不存在: 部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx
+[2026-03-18 08:53:46]   [OK]   Part1-玉米02-利润与库存-lyy周报.xlsx
+[2026-03-18 08:53:46]   [OK]   usda销售进度和装船量-周报.xlsx
+[2026-03-18 08:53:46]   [OK]   美国乙醇数据-周报.xlsx
+[2026-03-18 08:53:46]   [OK]   恢复-历史-基差月差套-lyy周报 - 副本.xlsx
+[2026-03-18 08:53:46]   [OK]   Part6-生猪03-生猪现货养殖利润-lyy周报xin.xlsx
+[2026-03-18 08:53:46]   [OK]   钢联数据淀粉周度数据-周报.xlsx
+[2026-03-18 08:53:46]   [OK]   东北深加工收购量.xlsx
+[2026-03-18 08:53:46]   [OK]   frieght dVT-Dl.xlsx
+[2026-03-18 08:53:46]   [OK]   高粱大麦.xlsx
+[2026-03-18 08:53:46]   [OK]   路透高粱usda数据更新-1.xlsx
+[2026-03-18 08:53:46]   [OK]   路透玉米usda数据更新-1.xlsx
+[2026-03-18 08:53:47]   [OK]   CBOT新.xlsx
+[2026-03-18 08:53:47]   [OK]   钢联普麦-dce价差.xlsx
+[2026-03-18 08:53:47]   [OK]   钢联数据_玉米：深加工企业：早间剩余车辆：山东（日）_2025-1-9_1736404789117.xlsx
+[2026-03-18 08:53:47]   复制完成: 成功=14, 跳过=1, 失败=0
+[2026-03-18 08:53:47] === Step 2: 重新生成 JSON 数据 ===
+[2026-03-18 08:53:57]   stdout: Loading data...
+Loading DCE corn futures...
+  DCE data: (4175, 7)
+Loading CBOT corn futures...
+  CBOT data: (6092, 6)
+Loading exchange rate...
+  Rate data: (11194, 1)
+Loading Zhoukou wheat data...
+  Wheat data: (2735, 3)
+Calculating DCE spreads...
+Calculating CBOT-DCE spreads (new formula)...
+Calculating Wheat-Corn spreads...
+Data exported to: C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\src\..\dashboard\data\spread_data.json
+[2026-03-18 08:53:57]   JSON 已生成: 2834 KB
+[2026-03-18 08:53:57] === Step 3: 内嵌 JSON 到 HTML ===
+[2026-03-18 08:53:57]   HTML 已更新，大小: 2704 KB
+[2026-03-18 08:53:57] === Step 4: 复制到部署目录 ===
+[2026-03-18 08:53:57]   已复制: 2863 KB
+[2026-03-18 08:53:57] === Step 5: 推送到 GitHub Pages ===
+[2026-03-18 08:53:58]   git commit: On branch main
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	copy_file.py
+	setup_git.py
+
+nothing added to commit but untracked files present (use "git add" to tra
+[2026-03-18 08:54:03]   git push: To https://github.com/tra-master/grain-dashboard.git
+   dae9250..11079f9  main -> main
+[2026-03-18 08:54:03]   推送成功！https://tra-master.github.io/grain-dashboard/
+[2026-03-18 08:54:03] ======== 自动更新完成 ========
+[2026-03-18 19:00:17] ======== 自动更新开始 ========
+[2026-03-18 19:00:17] === Step 1: 复制源数据文件 ===
+[2026-03-18 19:00:17]   [SKIP] 源文件不存在: 部分宏观进口和饲料替代的年度月度数据-周报(冲突文件-李洋洋).xlsx
+[2026-03-18 19:00:17]   [OK]   Part1-玉米02-利润与库存-lyy周报.xlsx
+[2026-03-18 19:00:17]   [OK]   usda销售进度和装船量-周报.xlsx
+[2026-03-18 19:00:17]   [OK]   美国乙醇数据-周报.xlsx
+[2026-03-18 19:00:17]   [OK]   恢复-历史-基差月差套-lyy周报 - 副本.xlsx
+[2026-03-18 19:00:17]   [OK]   Part6-生猪03-生猪现货养殖利润-lyy周报xin.xlsx
+[2026-03-18 19:00:17]   [OK]   钢联数据淀粉周度数据-周报.xlsx
+[2026-03-18 19:00:17]   [OK]   东北深加工收购量.xlsx
+[2026-03-18 19:00:17]   [OK]   frieght dVT-Dl.xlsx
+[2026-03-18 19:00:17]   [OK]   高粱大麦.xlsx
+[2026-03-18 19:00:17]   [OK]   路透高粱usda数据更新-1.xlsx
+[2026-03-18 19:00:17]   [OK]   路透玉米usda数据更新-1.xlsx
+[2026-03-18 19:00:17]   [OK]   CBOT新.xlsx
+[2026-03-18 19:00:17]   [OK]   钢联普麦-dce价差.xlsx
+[2026-03-18 19:00:17]   [OK]   钢联数据_玉米：深加工企业：早间剩余车辆：山东（日）_2025-1-9_1736404789117.xlsx
+[2026-03-18 19:00:17]   复制完成: 成功=14, 跳过=1, 失败=0
+[2026-03-18 19:00:17] === Step 2: 重新生成 JSON 数据 ===
+[2026-03-18 19:00:23]   stdout: Loading data...
+Loading DCE corn futures...
+  DCE data: (4175, 7)
+Loading CBOT corn futures...
+  CBOT data: (6092, 6)
+Loading exchange rate...
+  Rate data: (11194, 1)
+Loading Zhoukou wheat data...
+  Wheat data: (2735, 3)
+Calculating DCE spreads...
+Calculating CBOT-DCE spreads (new formula)...
+Calculating Wheat-Corn spreads...
+Data exported to: C:\Users\56531\WorkBuddy\20260315144604\grain-research-dashboard\src\..\dashboard\data\spread_data.json
+[2026-03-18 19:00:23]   JSON 已生成: 2834 KB
+[2026-03-18 19:00:23] === Step 3: 内嵌 JSON 到 HTML ===
+[2026-03-18 19:00:23]   HTML 已更新，大小: 2716 KB
+[2026-03-18 19:00:23] === Step 4: 复制到部署目录 ===
+[2026-03-18 19:00:23]   已复制: 2877 KB
+[2026-03-18 19:00:23] === Step 5: 推送到 GitHub Pages ===
+[2026-03-18 19:00:24]   git commit: [main 38584aa] auto update 2026-03-18 19:00
+ 1 file changed, 215 insertions(+), 5 deletions(-)
+[2026-03-18 19:00:30]   git push: To https://github.com/tra-master/grain-dashboard.git
+   aa2b98a..38584aa  main -> main
+[2026-03-18 19:00:30]   推送成功！https://tra-master.github.io/grain-dashboard/
+[2026-03-18 19:00:30] ======== 自动更新完成 ========

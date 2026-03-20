@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谷物期现交易研究看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+            --accent-purple: #a371f7;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .bg-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(163, 113, 247, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, var(--bg-primary) 0%, #0a0e14 100%);
+            z-index: -1;
+        }
+        
+        .navbar {
+            background: rgba(22, 27, 34, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { display: flex; align-items: center; gap: 12px; }
+        
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--text-primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .nav-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-tab:hover { color: var(--text-primary); background: var(--bg-card); }
+        
+        .nav-tab.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .main-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .page-header { margin-bottom: 24px; }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .stat-change {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stat-change.positive { color: var(--accent-green); }
+        .stat-change.negative { color: var(--accent-red); }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-card.full-width { grid-column: 1 / -1; }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .chart-title { font-size: 16px; font-weight: 600; }
+        
+        .chart-actions { display: flex; gap: 8px; }
+        
+        .chart-btn {
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .chart-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+        
+        .chart-container { position: relative; height: 300px; }
+        
+        .data-table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-title { font-size: 16px; font-weight: 600; }
+        
+        .data-table { width: 100%; border-collapse: collapse; }
+        
+        .data-table th, .data-table td {
+            padding: 12px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        .data-table td { font-size: 14px; }
+        
+        .data-table tr:hover td { background: rgba(88, 166, 255, 0.05); }
+        
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .tag-blue { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
+        .tag-green { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
+        .tag-red { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); }
+        .tag-yellow { background: rgba(210, 153, 34, 0.15); color: var(--accent-yellow); }
+        
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 24px;
+        }
+        
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .navbar-content { flex-direction: column; gap: 16px; }
+            .nav-tabs { flex-wrap: wrap; justify-content: center; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-in { animation: fadeIn 0.4s ease-out forwards; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        /* 聊天窗口样式 */
+        .chat-widget {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 380px;
+            height: 520px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .chat-widget.collapsed {
+            height: 60px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            cursor: pointer;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .chat-title {
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .chat-status {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+        }
+
+        .chat-toggle {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .chat-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .chat-message.ai .message-avatar {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .chat-message.user .message-avatar {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .chat-message.ai .message-content {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.user .message-content {
+            background: var(--accent-blue);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .chat-send-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            background: #4090e0;
+            transform: scale(1.05);
+        }
+
+        .chat-send-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 16px 12px;
+        }
+
+        .quick-question {
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-question:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <div class="logo-icon">G</div>
+                <span class="logo-text">谷物期现交易研究看板</span>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-page="dashboard">总览</button>
+                <button class="nav-tab" data-page="futures">期货</button>
+                <button class="nav-tab" data-page="basis">基差月差</button>
+                <button class="nav-tab" data-page="inventory">库存利润</button>
+                <button class="nav-tab" data-page="import">进口数据</button>
+                <button class="nav-tab" data-page="usda">USDA</button>
+                <button class="nav-tab" data-page="hog">养殖利润</button>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div id="page-dashboard" class="page">
+            <div class="page-header">
+                <h1 class="page-title">市场总览</h1>
+                <p class="page-subtitle">谷物期现市场关键指标实时监控 | 更新日期：2025-03-15</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card animate-in delay-1">
+                    <div class="stat-label"><span>🌽 CBOT玉米期货</span></div>
+                    <div class="stat-value" id="corn-price">452.50</div>
+                    <div class="stat-change positive" id="corn-change">
+                        <span>↑</span> <span>+3.25 (+0.72%)</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-in delay-2">
+                    <div class="stat-label"><span>🌾 CBOT小麦期货</span></div>
+                    <div class="stat-value" id="wheat-price">618.25</div>
+                    <div class="stat-change negative" id="wheat-change">
+                        <span>↓</span> <span>-5.50 (-0.88%)</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-in delay-3">
+                    <div class="stat-label"><span>📊 玉米基差(大连)</span></div>
+                    <div class="stat-value" id="basis-corn">-28</div>
+                    <div class="stat-change negative" id="basis-corn-change">
+                        <span>↓</span> <span>-5 (走弱)</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-in delay-4">
+                    <div class="stat-label"><span>📈 深加工库存(万吨)</span></div>
+                    <div class="stat-value" id="inventory">487</div>
+                    <div class="stat-change negative" id="inventory-change">
+                        <span>↓</span> <span>-23 (-4.5%)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3 class="chart-title">CBOT期货价格走势</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn">1M</button>
+                            <button class="chart-btn">3M</button>
+                            <button class="chart-btn active">6M</button>
+                            <button class="chart-btn">1Y</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cbotChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">玉米基差走势</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="basisChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">深加工库存趋势</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="inventoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-futures" class="page" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">期货市场</h1>
+                <p class="page-subtitle">CBOT玉米、小麦期货价格走势分析</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">CBOT玉米近月</div>
+                    <div class="stat-value">452.50</div>
+                    <div class="stat-change positive">↑ +3.25</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">CBOT玉米远月</div>
+                    <div class="stat-value">468.25</div>
+                    <div class="stat-change positive">↑ +2.75</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">CBOT小麦近月</div>
+                    <div class="stat-value">618.25</div>
+                    <div class="stat-change negative">↓ -5.50</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">玉米月差(C2201-C2203)</div>
+                    <div class="stat-value">-16.00</div>
+                    <div class="stat-change negative">↓ 走弱</div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3 class="chart-title">CBOT期货价格对比</h3>
+                    </div>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="futuresCompareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-basis" class="page" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">基差月差分析</h1>
+                <p class="page-subtitle">玉米、小麦基差与月差走势</p>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">玉米基差(锦州港)</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cornBasisChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">玉米月差走势</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cornSpreadChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">小麦基差</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="wheatBasisChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">普麦期现价差</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="wheatSpreadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-inventory" class="page" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">库存与利润</h1>
+                <p class="page-subtitle">深加工企业库存及利润变化</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">当前库存(万吨)</div>
+                    <div class="stat-value">487</div>
+                    <div class="stat-change negative">↓ -23 (-4.5%)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">加工利润(元/吨)</div>
+                    <div class="stat-value">-45</div>
+                    <div class="stat-change negative">↓ 亏损扩大</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">淀粉开机率</div>
+                    <div class="stat-value">68.5%</div>
+                    <div class="stat-change negative">↓ -2.3%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">DDGS产量(万吨)</div>
+                    <div class="stat-value">32.8</div>
+                    <div class="stat-change positive">↑ +1.2</div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3 class="chart-title">库存与利润走势</h3>
+                    </div>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="inventoryProfitChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-import" class="page" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">进口数据</h1>
+                <p class="page-subtitle">高粱、大麦等替代品进口量价分析</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">高粱月度进口(万吨)</div>
+                    <div class="stat-value">85</div>
+                    <div class="stat-change positive">↑ +12</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">大麦月度进口(万吨)</div>
+                    <div class="stat-value">92</div>
+                    <div class="stat-change positive">↑ +8</div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">高粱进口量价</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sorghumChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">大麦进口量价</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="barleyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-usda" class="page" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">USDA供需报告</h1>
+                <p class="page-subtitle">USDA销售进度与供需平衡表</p>
+            </div>
+            
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">USDA销售进度 (2025/26年度)</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>品种</th>
+                            <th>年度</th>
+                            <th>销售进度</th>
+                            <th>装船进度</th>
+                            <th>五年均值</th>
+                            <th>更新日期</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🌽 玉米</td>
+                            <td>2025/26</td>
+                            <td><span class="tag tag-green">75%</span></td>
+                            <td><span class="tag tag-blue">45%</span></td>
+                            <td>68%</td>
+                            <td>2025-03-15</td>
+                        </tr>
+                        <tr>
+                            <td>🌾 小麦</td>
+                            <td>2025/26</td>
+                            <td><span class="tag tag-green">82%</span></td>
+                            <td><span class="tag tag-blue">55%</span></td>
+                            <td>72%</td>
+                            <td>2025-03-15</td>
+                        </tr>
+                        <tr>
+                            <td>🌾 高粱</td>
+                            <td>2025/26</td>
+                            <td><span class="tag tag-yellow">60%</span></td>
+                            <td><span class="tag tag-blue">38%</span></td>
+                            <td>55%</td>
+                            <td>2025-03-15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="charts-grid" style="margin-top: 24px;">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">美玉米出口销售进度</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="usdaCornSalesChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">美麦出口销售进度</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="usdaWheatSalesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-hog" class="page" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">养殖利润</h1>
+                <p class="page-subtitle">生猪现货与养殖利润分析</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">生猪现货价(元/公斤)</div>
+                    <div class="stat-value">14.85</div>
+                    <div class="stat-change negative">↓ -0.32</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">自繁自养利润(元/头)</div>
+                    <div class="stat-value">-125</div>
+                    <div class="stat-change negative">亏损扩大</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">外购仔猪利润(元/头)</div>
+                    <div class="stat-value">-85</div>
+                    <div class="stat-change negative">亏损扩大</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">猪粮比</div>
+                    <div class="stat-value">5.82</div>
+                    <div class="stat-change negative">低于盈亏线</div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3 class="chart-title">生猪养殖利润走势</h3>
+                    </div>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="hogProfitChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 聊天窗口部件 -->
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-header" onclick="toggleChat()">
+            <div class="chat-header-info">
+                <div class="chat-avatar">🤖</div>
+                <div>
+                <div class="chat-title">谷物研究助手</div>
+                <div class="chat-status">在线 · 随时提问</div>
+                </div>
+            </div>
+            <button class="chat-toggle" id="chatToggleBtn">−</button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message ai">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    你好！我是谷物研究助手，可以帮你分析粮食市场数据、解读USDA报告、查询基差月差等信息。有什么想了解的吗？
+                </div>
+            </div>
+        </div>
+        
+        <div class="quick-questions">
+            <div class="quick-question" onclick="sendQuickQuestion('今日玉米期货行情')">今日玉米期货行情</div>
+            <div class="quick-question" onclick="sendQuickQuestion('当前基差水平')">当前基差水平</div>
+            <div class="quick-question" onclick="sendQuickQuestion('USDA最新报告')">USDA最新报告</div>
+            <div class="quick-question" onclick="sendQuickQuestion('养殖利润如何')">养殖利润如何</div>
+        </div>
+        
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="输入问题..." onkeypress="handleKeyPress(event)">
+            <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <p>谷物期现交易研究看板 | 数据来源：钢联数据、USDA、路透 | 更新时间：2025-03-15 15:30:00</p>
+    </footer>
+    
+    <script>
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+        
+        function generateTimeSeries(days, min, max, trend = 0) {
+            const data = [];
+            let value = (min + max) / 2;
+            const now = new Date();
+            
+            for (let i = days; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                value += trend + (Math.random() - 0.5) * (max - min) * 0.08;
+                value = Math.max(min, Math.min(max, value));
+                data.push({
+                    x: date.toISOString().split('T')[0],
+                    y: Math.round(value * 100) / 100
+                });
+            }
+            return data;
+        }
+        
+        let cbotChart, basisChart, inventoryChart;
+        
+        function initCharts() {
+            const cbotCtx = document.getElementById('cbotChart');
+            if (cbotCtx) {
+                cbotChart = new Chart(cbotCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            {
+                                label: '玉米',
+                                data: generateTimeSeries(180, 420, 490, 0.3),
+                                borderColor: '#f9a825',
+                                backgroundColor: 'rgba(249, 168, 37, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                                pointHoverRadius: 4
+                            },
+                            {
+                                label: '小麦',
+                                data: generateTimeSeries(180, 560, 680, -0.2),
+                                borderColor: '#ffa726',
+                                backgroundColor: 'rgba(255, 167, 38, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                                pointHoverRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        scales: {
+                            x: { type: 'time', time: { unit: 'month' }, grid: { color: '#21262d' } },
+                            y: { grid: { color: '#21262d' }, title: { display: true, text: '美分/蒲式耳' } }
+                        },
+                        plugins: { legend: { position: 'top' }, tooltip: { backgroundColor: '#21262d', borderColor: '#30363d', borderWidth: 1 } }
+                    }
+                });
+            }
+            
+            const basisCtx = document.getElementById('basisChart');
+            if (basisCtx) {
+                basisChart = new Chart(basisCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: '基差',
+                            data: generateTimeSeries(180, -80, 20, -0.2),
+                            borderColor: '#58a6ff',
+                            backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { x: { type: 'time', time: { unit: 'month' } }, y: { grid: { color: '#21262d' } } }
+                    }
+                });
+            }
+            
+            const invCtx = document.getElementById('inventoryChart');
+            if (invCtx) {
+                inventoryChart = new Chart(invCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        datasets: [{
+                            label: '库存',
+                            data: generateTimeSeries(180, 350, 550, -0.5),
+                            backgroundColor: 'rgba(163, 113, 247, 0.6)',
+                            borderColor: '#a371f7',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { x: { type: 'time', time: { unit: 'month' } }, y: { grid: { color: '#21262d' } } }
+                    }
+                });
+            }
+            
+            // 期货对比图
+            const futuresCompareCtx = document.getElementById('futuresCompareChart');
+            if (futuresCompareCtx) {
+                new Chart(futuresCompareCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: 'CBOT玉米近月', data: generateTimeSeries(180, 420, 490, 0.3), borderColor: '#f9a825', tension: 0.4 },
+                            { label: 'CBOT玉米远月', data: generateTimeSeries(180, 440, 510, 0.25), borderColor: '#ffca28', tension: 0.4 },
+                            { label: 'CBOT小麦近月', data: generateTimeSeries(180, 560, 680, -0.2), borderColor: '#8d6e63', tension: 0.4 },
+                            { label: 'CBOT小麦远月', data: generateTimeSeries(180, 580, 700, -0.15), borderColor: '#a1887f', tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        scales: { x: { type: 'time', time: { unit: 'month' } }, y: { grid: { color: '#21262d' } } }
+                    }
+                });
+            }
+            
+            // 基差图
+            const cornBasisCtx = document.getElementById('cornBasisChart');
+            if (cornBasisCtx) {
+                new Chart(cornBasisCtx.getContext('2d'), {
+                    type: 'line',
+                    data: { datasets: [{ label: '锦州港基差', data: generateTimeSeries(180, -80, 20, -0.2), borderColor: '#58a6ff', tension: 0.4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'month' } }, y: { grid: { color: '#21262d' } } } }
+                });
+            }
+            
+            // 月差图
+            const cornSpreadCtx = document.getElementById('cornSpreadChart');
+            if (cornSpreadCtx) {
+                new Chart(cornSpreadCtx.getContext('2d'), {
+                    type: 'line',
+                    data: { datasets: [{ label: '月差(C2201-C2203)', data: generateTimeSeries(180, -40, 20, -0.1), borderColor: '#a371f7', tension: 0.4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'month' } }, y: { grid: { color: '#21262d' } } } }
+                });
+            }
+            
+            // 库存利润图
+            const invProfitCtx = document.getElementById('inventoryProfitChart');
+            if (invProfitCtx) {
+                new Chart(invProfitCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: '库存(万吨)', data: generateTimeSeries(180, 350, 550, -0.5), borderColor: '#a371f7', yAxisID: 'y', tension: 0.4 },
+                            { label: '加工利润(元/吨)', data: generateTimeSeries(180, -100, 150, -0.3), borderColor: '#3fb950', yAxisID: 'y1', tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        scales: {
+                            x: { type: 'time', time: { unit: 'month' } },
+                            y: { type: 'linear', position: 'left', grid: { color: '#21262d' } },
+                            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+            }
+            
+            // 生猪养殖利润图
+            const hogCtx = document.getElementById('hogProfitChart');
+            if (hogCtx) {
+                new Chart(hogCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: '自繁自养利润', data: generateTimeSeries(180, -200, 300, -1), borderColor: '#f85149', tension: 0.4 },
+                            { label: '外购仔猪利润', data: generateTimeSeries(180, -250, 250, -0.8), borderColor: '#ff9800', tension: 0.4 },
+                            { label: '猪粮比', data: generateTimeSeries(180, 4.5, 8, -0.01), borderColor: '#58a6ff', yAxisID: 'y1', tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        scales: {
+                            x: { type: 'time', time: { unit: 'month' } },
+                            y: { type: 'linear', position: 'left', grid: { color: '#21262d' }, title: { display: true, text: '元/头' } },
+                            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: '猪粮比' } }
+                        }
+                    }
+                });
+            }
+            
+            // 进口图
+            const sorghumCtx = document.getElementById('sorghumChart');
+            if (sorghumCtx) {
+                new Chart(sorghumCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        datasets: [
+                            { label: '进口量(万吨)', data: generateTimeSeries(12, 40, 120, 2), backgroundColor: 'rgba(63, 185, 80, 0.6)', yAxisID: 'y' },
+                            { label: '单价(美元/吨)', data: generateTimeSeries(12, 260, 320, 0.5), borderColor: '#58a6ff', type: 'line', yAxisID: 'y1' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { type: 'category', labels: ['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月'] },
+                            y: { type: 'linear', position: 'left' },
+                            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+            }
+        }
+        
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                const pageId = 'page-' + this.dataset.page;
+                document.querySelectorAll('.page').forEach(page => {
+                    page.style.display = 'none';
+                });
+                document.getElementById(pageId).style.display = 'block';
+            });
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+        });
+    </script>
+</body>
+</html>

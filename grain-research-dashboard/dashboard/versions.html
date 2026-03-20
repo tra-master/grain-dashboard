@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本管理 - 谷物期现交易研究看板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .bg-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 20% 20%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(163, 113, 247, 0.06) 0%, transparent 50%),
+                        linear-gradient(180deg, var(--bg-primary) 0%, #0a0e14 100%);
+            z-index: -1;
+        }
+        
+        .navbar {
+            background: rgba(22, 27, 34, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent-blue), #a371f7);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+        
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .version-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .version-header:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+        
+        .version-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .version-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+        
+        .version-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .version-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-released {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+        }
+        
+        .status-current {
+            background: rgba(88, 166, 255, 0.15);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+        
+        .version-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .version-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        
+        .version-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+        
+        .version-body {
+            padding: 20px;
+            display: none;
+        }
+        
+        .version-body.expanded {
+            display: block;
+        }
+        
+        .section {
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+        
+        .change-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .change-list li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        .change-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+        
+        .issue-list li:before {
+            content: "⚠";
+            color: var(--accent-red);
+        }
+        
+        .note-box {
+            background: rgba(88, 166, 255, 0.1);
+            border-left: 3px solid var(--accent-blue);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 12px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #4090e0;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+        
+        .btn-danger {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+        
+        .btn-danger:hover {
+            background: rgba(248, 81, 73, 0.25);
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .timeline-marker {
+            width: 12px;
+            height: 12px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .timeline-item:last-child .timeline-marker:after {
+            display: none;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 2px solid var(--border-color);
+        }
+        
+        .compare-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .compare-card {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .compare-card h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+        
+        .error-message {
+            background: rgba(248, 81, 73, 0.15);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            color: var(--accent-red);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .success-message {
+            background: rgba(63, 185, 80, 0.15);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            color: var(--accent-green);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <div class="logo-icon">G</div>
+                <span>谷物期现交易研究看板</span>
+            </div>
+            <a href="spreads.html" class="nav-link">← 返回看板</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">📦 版本管理中心</h1>
+            <p class="page-subtitle">查看所有发布版本、更新说明、版本对比及回滚操作</p>
+        </div>
+        
+        <div id="version-list"></div>
+        
+        <div id="loading-message" class="loading">正在加载版本信息...</div>
+    </main>
+    
+    <!-- 版本对比模态框 -->
+    <div id="compareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">版本对比</div>
+            <div class="modal-body" id="compareBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 版本回滚确认模态框 -->
+    <div id="rollbackModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">⚠️ 确认版本回滚</div>
+            <div class="modal-body">
+                您即将回滚到版本 <strong id="rollbackVersion"></strong>。
+                <br><br>
+                此操作将：
+                <ul style="margin-top: 12px; padding-left: 20px;">
+                    <li>重新加载该版本的代码</li>
+                    <li>保留您所有的用户设置和偏好</li>
+                    <li>可随时切换回最新版本</li>
+                </ul>
+                <br>
+                确定要继续吗？
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmRollback()">确认回滚</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>谷物期现交易研究看板 | 版本管理系统 v1.0 | 最后更新: 2026-03-20</p>
+    </footer>
+    
+    <script>
+        let versionsData = null;
+        let pendingRollbackVersion = null;
+        
+        // 加载版本数据
+        async function loadVersions() {
+            try {
+                // 首先尝试从服务器加载
+                const response = await fetch('data/versions.json');
+                if (!response.ok) throw new Error('Network response was not ok');
+                versionsData = await response.json();
+                renderVersions();
+            } catch (error) {
+                console.log('无法从服务器加载，使用本地内嵌数据...');
+                // 如果加载失败，使用本地内嵌数据
+                loadLocalVersionData();
+            }
+        }
+        
+        function loadLocalVersionData() {
+            // 本地内嵌的版本数据（备用）
+            versionsData = {
+                "versions": [
+                    {
+                        "version": "v1.0",
+                        "releaseDate": "2025-03-15",
+                        "author": "AI Assistant",
+                        "status": "released",
+                        "changes": [
+                            "初始版本发布",
+                            "支持7个看板页面：总览、期货、基差月差、库存利润、进口数据、USDA、养殖利润",
+                            "包含完整的模拟数据展示",
+                            "支持Windows定时任务每日自动更新",
+                            "实现Chart.js交互式图表",
+                            "支持dark主题深色模式设计"
+                        ],
+                        "features": [
+                            "DCE月间价差分析（1-3、3-5、3-7、3-9、1-5等）",
+                            "CBOT-DCE价差对比分析",
+                            "周口小麦-玉米期货价差分析",
+                            "FOB基差分析",
+                            "年份数据隐显功能"
+                        ],
+                        "knownIssues": [],
+                        "notes": "首次发布，涵盖基本的看板功能"
+                    },
+                    {
+                        "version": "v1.1",
+                        "releaseDate": "2026-03-18",
+                        "author": "AI Assistant",
+                        "status": "released",
+                        "changes": [
+                            "优化DCE月间价差图表：默认显示2021年1月1日以后的数据（隐藏2020年数据）",
+                            "优化CBOT-DCE价差图表：默认显示2021年1月1日以后的数据",
+                            "优化小麦-玉米价差图表：默认显示2021年1月1日以后的数据",
+                            "为三个主要价差图表添加月份范围选择器",
+                            "默认横轴显示范围现在根据图表名称自动计算",
+                            "支持用户手动选择横轴月份范围，选择结果自动保存到浏览器本地存储",
+                            "添加'重置'按钮快速恢复默认月份范围",
+                            "增加版本管理系统：支持查看所有历史版本、版本更新说明、快速回滚功能",
+                            "改进UI说明文案，更清楚地指导用户使用月份范围选择"
+                        ],
+                        "features": [
+                            "智能月份范围解析算法",
+                            "基于localStorage的月份范围记忆功能",
+                            "版本管理页面（versions.html）",
+                            "版本查询和比较功能",
+                            "一键回滚到历史版本"
+                        ],
+                        "knownIssues": [
+                            "跨年月份范围显示仍需进一步优化",
+                            "在某些浏览器上localStorage可能不稳定"
+                        ],
+                        "notes": "重点改进数据展示范围的灵活性和版本管理能力"
+                    },
+                    {
+                        "version": "v1.2",
+                        "releaseDate": "2026-03-19",
+                        "author": "AI Assistant",
+                        "status": "released",
+                        "changes": [
+                            "横坐标动态化：各价差图表横坐标从实际起始月份开始，不再固定从1月开始",
+                            "新增 generateDynamicLabels() 函数，根据月份范围动态生成横坐标标签",
+                            "DCE1-3跨年价差：横坐标显示4月到次年1月，不再显示无关的2-3月区间",
+                            "DCE9-1同年价差：横坐标显示2月到9月，不再显示10月-次年1月区间",
+                            "横坐标x轴只在每月1日打标签，避免标签过密",
+                            "保留月份选择器功能，用户可手动调整显示范围"
+                        ],
+                        "features": [
+                            "动态横坐标标签生成",
+                            "同年/跨年模式自动判断",
+                            "月份刻度精确定位"
+                        ],
+                        "knownIssues": [
+                            "labels切片后与data数组长度不匹配，导致Chart.js无法渲染图表"
+                        ],
+                        "notes": "横坐标动态化是重要的用户体验改进"
+                    },
+                    {
+                        "version": "v1.3",
+                        "releaseDate": "2026-03-19",
+                        "author": "AI Assistant",
+                        "status": "released",
+                        "changes": [
+                            "修复月份范围持久化问题：移除renderSeasonalCharts中每次清除localStorage缓存的代码",
+                            "首次加载时使用parseSpreadMonthRange()的默认值生成横坐标",
+                            "用户修改月份范围后，重新加载页面可恢复之前设置的值",
+                            "重置按钮现在正确清除localStorage并恢复默认范围"
+                        ],
+                        "features": [
+                            "月份范围localStorage持久化",
+                            "用户偏好跨页面刷新保持"
+                        ],
+                        "knownIssues": [
+                            "labels切片后与data数组长度不匹配，导致Chart.js无法渲染图表（v1.2遗留问题）"
+                        ],
+                        "notes": "修复缓存清除导致的月份范围无法保存的问题"
+                    },
+                    {
+                        "version": "v1.4",
+                        "releaseDate": "2026-03-19",
+                        "author": "AI Assistant",
+                        "status": "released",
+                        "changes": [
+                            "新增 generateSlicedData() 函数，按照与 generateDynamicLabels() 完全相同的逻辑切片data数组",
+                            "修复图表初始化时data/labels长度不匹配导致Chart.js无法渲染的问题",
+                            "修复updateChartRange()中月份选择器变化时data未同步更新的问题",
+                            "修复resetBtn点击时data未同步更新的问题",
+                            "将yearDataMap保存到图表实例（chartInst._yearDataMap），供动态更新使用",
+                            "正确处理跨年标签格式（如\"2021/2022\"）提取原始年份获取完整数据"
+                        ],
+                        "features": [
+                            "数据切片与标签切片完全同步",
+                            "同年模式：直接截取 startMonth~endMonth",
+                            "跨年模式：startMonth~12月末 + 1月~endMonth末尾，两段拼接",
+                            "三个修改点全覆盖：初始化、选择器变化、重置按钮"
+                        ],
+                        "knownIssues": [],
+                        "notes": "彻底解决v1.2遗留的data/labels不匹配问题，图表可正常渲染"
+                    },
+                    {
+                        "version": "v1.5",
+                        "releaseDate": "2026-03-20",
+                        "author": "AI Assistant",
+                        "status": "current",
+                        "changes": [
+                            "新增价差图表全屏查看功能",
+                            "每个价差图表卡片右上角添加全屏按钮（⛶）和还原按钮（✕）",
+                            "支持点击按钮或按 ESC 键退出全屏模式",
+                            "全屏时图表占满 95% 视口宽度和 90% 视口高度",
+                            "添加背景遮罩层，点击遮罩层也可退出全屏",
+                            "全屏/还原时图表自动调整大小并重绘",
+                            "使用图表销毁重建机制确保退出全屏后尺寸完全恢复"
+                        ],
+                        "features": [
+                            "全屏查看价差图表",
+                            "ESC 键快捷退出",
+                            "背景遮罩层点击退出",
+                            "图表配置缓存与重建",
+                            "月份选择器事件重新绑定"
+                        ],
+                        "knownIssues": [],
+                        "notes": "提升图表查看体验，支持大屏详细分析"
+                    }
+                ],
+                "currentVersion": "v1.5"
+            };
+            renderVersions();
+        }
+        
+        function renderVersions() {
+            const container = document.getElementById('version-list');
+            const loading = document.getElementById('loading-message');
+            loading.style.display = 'none';
+            container.innerHTML = '';
+            
+            if (!versionsData || !versionsData.versions) {
+                container.innerHTML = '<div class="error-message">版本数据加载失败</div>';
+                return;
+            }
+            
+            // 按时间倒序排列版本
+            const sortedVersions = [...versionsData.versions].reverse();
+            
+            sortedVersions.forEach((version, index) => {
+                const isCurrent = version.version === versionsData.currentVersion;
+                const statusClass = isCurrent ? 'status-current' : 'status-released';
+                const statusText = isCurrent ? '当前版本' : '已发布';
+                
+                const versionHtml = `
+                    <div class="version-container">
+                        <div class="version-header" onclick="toggleVersion(this)">
+                            <div class="version-title">
+                                <div class="version-number">${version.version}</div>
+                                <span style="opacity: 0.3;">•</span>
+                                <div class="version-date">${version.releaseDate} 由 ${version.author} 发布</div>
+                                <span class="version-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="version-actions">
+                                <button class="version-btn" onclick="event.stopPropagation(); compareVersions('${version.version}')">对比</button>
+                                ${!isCurrent ? `<button class="version-btn" onclick="event.stopPropagation(); openRollbackModal('${version.version}')">回滚</button>` : ''}
+                                <span style="color: var(--text-secondary); font-size: 12px;">▼</span>
+                            </div>
+                        </div>
+                        <div class="version-body">
+                            ${renderVersionDetails(version)}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += versionHtml;
+            });
+        }
+        
+        function renderVersionDetails(version) {
+            let html = '';
+            
+            if (version.changes && version.changes.length > 0) {
+                html += `
+                    <div class="section">
+                        <div class="section-title">🔧 主要变更</div>
+                        <ul class="change-list">
+                            ${version.changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (version.features && version.features.length > 0) {
+                html += `
+                    <div class="section">
+                        <div class="section-title">✨ 新增功能</div>
+                        <ul class="change-list">
+                            ${version.features.map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (version.improvements && version.improvements.length > 0) {
+                html += `
+                    <div class="section">
+                        <div class="section-title">📈 优化改进</div>
+                        <ul class="change-list">
+                            ${version.improvements.map(imp => `<li>${imp}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (version.knownIssues && version.knownIssues.length > 0) {
+                html += `
+                    <div class="section">
+                        <div class="section-title">⚠️ 已知问题</div>
+                        <ul class="change-list issue-list">
+                            ${version.knownIssues.map(issue => `<li>${issue}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (version.notes) {
+                html += `<div class="note-box"><strong>版本说明：</strong> ${version.notes}</div>`;
+            }
+            
+            return html;
+        }
+        
+        function toggleVersion(header) {
+            const body = header.nextElementSibling;
+            body.classList.toggle('expanded');
+        }
+        
+        function compareVersions(versionNum) {
+            const version = versionsData.versions.find(v => v.version === versionNum);
+            if (!version) return;
+            
+            const current = versionsData.versions.find(v => v.version === versionsData.currentVersion);
+            
+            let compareHtml = `
+                <div class="compare-section">
+                    <div class="compare-card">
+                        <h4>版本 ${version.version}</h4>
+                        <p><strong>发布日期：</strong> ${version.releaseDate}</p>
+                        <p><strong>作者：</strong> ${version.author}</p>
+                        <p style="margin-top: 12px;"><strong>变更数：</strong> ${version.changes ? version.changes.length : 0}</p>
+                    </div>
+                    <div class="compare-card">
+                        <h4>当前版本 ${current.version}</h4>
+                        <p><strong>发布日期：</strong> ${current.releaseDate}</p>
+                        <p><strong>作者：</strong> ${current.author}</p>
+                        <p style="margin-top: 12px;"><strong>变更数：</strong> ${current.changes ? current.changes.length : 0}</p>
+                    </div>
+                </div>
+            `;
+            
+            if (version.changes && current.changes) {
+                compareHtml += '<div style="margin-top: 16px;"><strong>变更对比：</strong></div>';
+                compareHtml += '<ul class="change-list" style="margin-top: 8px;">';
+                version.changes.forEach(change => {
+                    compareHtml += `<li>- ${change}</li>`;
+                });
+                compareHtml += '</ul>';
+            }
+            
+            document.getElementById('compareBody').innerHTML = compareHtml;
+            document.getElementById('compareModal').classList.add('show');
+        }
+        
+        function openRollbackModal(versionNum) {
+            pendingRollbackVersion = versionNum;
+            document.getElementById('rollbackVersion').textContent = versionNum;
+            document.getElementById('rollbackModal').classList.add('show');
+        }
+        
+        function confirmRollback() {
+            if (!pendingRollbackVersion) return;
+            
+            // 保存回滚信息到localStorage
+            const rollbackInfo = {
+                timestamp: new Date().toISOString(),
+                fromVersion: versionsData.currentVersion,
+                toVersion: pendingRollbackVersion
+            };
+            
+            try {
+                let history = JSON.parse(localStorage.getItem('rollback_history') || '[]');
+                history.push(rollbackInfo);
+                localStorage.setItem('rollback_history', JSON.stringify(history));
+                localStorage.setItem('version_rollback_target', pendingRollbackVersion);
+            } catch(e) {
+                console.error('Failed to save rollback info:', e);
+            }
+            
+            // 显示成功消息后重定向
+            alert(`已成功回滚到 ${pendingRollbackVersion}，页面将重新加载...`);
+            location.reload();
+        }
+        
+        function closeModal() {
+            document.getElementById('compareModal').classList.remove('show');
+            document.getElementById('rollbackModal').classList.remove('show');
+            pendingRollbackVersion = null;
+        }
+        
+        // 页面加载时获取版本数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVersions();
+        });
+    </script>
+</body>
+</html>
